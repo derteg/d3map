@@ -44,16 +44,11 @@
   <script type="text/javascript">
 	var width = 960,
 		height = 500,
-		centered,
+		region,
 		regions,
+		region,
 		station,
 		scale0 = (width - 1) / 2 / Math.PI;
-
-	var zoom = d3.behavior.zoom()
-		.translate([width / 2, height / 2])
-		.scale(scale0)
-		.scaleExtent([scale0, 8 * scale0])
-		.on("zoom", zoomed);
 
 	// Setting color domains(intervals of values) for our map
 	var color_domain = [50, 150, 350, 750, 1500];
@@ -76,10 +71,6 @@
 
 	var path = d3.geo.path().projection(projection);
 
-	svg
-		.call(zoom)
-		.call(zoom.event);
-
 	//Reading map file and data
 	queue()
 		.defer(d3.json, "russia_topo.json")
@@ -100,7 +91,7 @@
 			.attr("class", "region");
 
 		//Drawing Choropleth
-		regions.selectAll("path")
+		region = regions.selectAll("path")
 			.data(topojson.object(map, map.objects.name).geometries)
 			.enter().append("path")
 			.attr("d", path)
@@ -117,6 +108,24 @@
 					.transition().duration(300)
 					.style("opacity", 0.8);
 			});
+
+		zoom = d3.behavior.zoom()
+			.translate([width / 2, height / 2])
+			.scale(scale0)
+			.scaleExtent([scale0, 8 * scale0])
+			.on("zoom", zoomed);
+
+		svg
+			.call(zoom)
+			.call(zoom.event);
+
+		function zoomed() {
+			projection
+				.translate(zoom.translate())
+				.scale(zoom.scale());
+
+			region.attr("d", path);
+		}
 
 		// Adding cities on the map
 		d3.tsv("cities.tsv", function(error, data) {
@@ -144,15 +153,6 @@
 				.style("cursor", "pointer");
 		});
 	};	// <-- End of Choropleth drawing
-
-	function zoomed() {
-		projection
-			.translate(zoom.translate())
-			.scale(zoom.scale());
-		// regions.selectAll("path").attr("d", path);
-	}
-
-	console.log(regions);
   </script>
 </body>
 </html>
