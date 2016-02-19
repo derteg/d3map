@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Accidents on the Road - Choropleth</title>
+  <script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+  <script type="text/javascript" src="http://d3js.org/queue.v1.min.js"></script>
+  <script type="text/javascript" src="http://d3js.org/topojson.v0.min.js"></script>
+  <!--script type="text/javascript" src="http://d3js.org/topojson.v1.min.js"></script -->
+</head>
+<style>
+	path {
+	  stroke:white;
+	  stroke-width: 1px;
+	}
+
+	body {
+	  font-family: Arial, sans-serif;
+	}
+
+	.station {
+	  font: 10px sans-serif;
+	  font-weight: bold;
+	}
+
+	.legend {
+	  font-size: 12px;
+	}
+
+	div.tooltip {   
+	  position: absolute;           
+	  text-align: center;           
+	  width: 150px;                  
+	  height: 25px;                 
+	  padding: 2px;             
+	  font-size: 10px;     
+	  background: #FFFFE0;
+	  border: 1px;      
+	  border-radius: 8px;           
+	  pointer-events: none;         
+	}        
+</style>
+<body>
+  <script type="text/javascript">
+	var width = 960,
+		height = 500,
+		centered,
+		regions,
+		station,
+		scale0 = (width - 1) / 2 / Math.PI;
+
+	var zoom = d3.behavior.zoom()
+		.translate([width / 2, height / 2])
+		.scale(scale0)
+		.scaleExtent([scale0, 8 * scale0])
+		.on("zoom", zoomed);
+
+	// Setting color domains(intervals of values) for our map
+	var color_domain = [50, 150, 350, 750, 1500];
+	var ext_color_domain = [0, 50, 150, 350, 750, 1500];
+	var legend_labels = ["< 50", "50+", "100+", "150+", "350+", "750+", "1000+", "> 1500"];
+	var color = d3.scale.threshold()
+		.domain(color_domain)
+		.range(["#3fb8ff", "#68cafd", "#3fb8ff", "#3fb8ff", "#aee4ff", "#0099ff", "#68cafd", "#087cdf"]);
+
+	var svg = d3.select("body").append("svg")
+		.attr("width", width)
+		.attr("height", height);
+
+	var projection = d3.geo.albers()
+		.rotate([-105, 0])
+		.center([-10, 65])
+		.parallels([52, 64])
+		.scale(700)
+		.translate([width / 2, height / 2]);
+
+	var path = d3.geo.path().projection(projection);
+
+	svg
+		.call(zoom)
+		.call(zoom.event);
+
+	//Reading map file and data
+	queue()
+		.defer(d3.json, "russia_topo.json")
+		.defer(d3.csv, "Accidents.csv")
+		.await(ready);
+
+	//Start of Choropleth drawing
+	function ready(error, map, data) {
+		var rateById = {};
+		var nameById = {};
+
+		data.forEach(function(d) {
+			rateById[d.RegionCode] = +d.Deaths;
+			nameById[d.RegionCode] = d.RegionName;
+		});
+
+		regions = svg.append("g")
+			.attr("class", "region");
+
+		//Drawing Choropleth
+		regions.selectAll("path")
+			.data(topojson.object(map, map.objects.name).geometries)
+			.enter().append("path")
+			.attr("d", path)
+			.style("stroke-width", "0")
+			.style("fill", function(d) {
+				return color(rateById[d.properties.region]);
+			})
+			.style("opacity", 0.8)
+			.on("mouseover", function(d) {
+				d3.select(this).transition().duration(300).style("opacity", 1);
+			})
+			.on("mouseout", function() {
+				d3.select(this)
+					.transition().duration(300)
+					.style("opacity", 0.8);
+			});
+
+		// Adding cities on the map
+		d3.tsv("cities.tsv", function(error, data) {
+			station = svg.selectAll("g.station")
+				.data(data)
+				.enter()
+				.append("g")
+				.attr("class", "station")
+				.attr("transform", function(d) {
+					return "translate(" + projection([d.lon, d.lat]) + ")";
+				});
+
+			station.append("circle")
+				.attr("r", 13)
+				.style("fill", "#cce4f9")
+				.style("stroke", "white")
+				.style("stroke-width", "2px")
+
+			station.append('svg:image')
+				.attr('x',-11)
+				.attr('y',-11)
+				.attr('width', 22)
+				.attr('height', 22)
+				.attr("xlink:href", function(d) {return d.Type})
+				.style("cursor", "pointer");
+		});
+	};	// <-- End of Choropleth drawing
+
+	function zoomed() {
+		projection
+			.translate(zoom.translate())
+			.scale(zoom.scale());
+		// regions.selectAll("path").attr("d", path);
+	}
+
+	console.log(regions);
+  </script>
+</body>
+</html>
