@@ -42,13 +42,13 @@
 </style>
 <body>
   <script type="text/javascript">
-	var width = 960,
+	var width = 1200,
 		height = 500,
 		region,
-		regions,
 		region,
 		station,
-		scale0 = (width - 1) / 2 / Math.PI;
+		stationData,
+		scale0 = (width - 1) / 2;
 
 	// Setting color domains(intervals of values) for our map
 	var color_domain = [50, 150, 350, 750, 1500];
@@ -71,24 +71,25 @@
 
 	var path = d3.geo.path().projection(projection);
 
+	var regions = svg.append("g")
+			.attr("class", "region");
+
 	//Reading map file and data
 	queue()
 		.defer(d3.json, "russia_topo.json")
 		.defer(d3.csv, "Accidents.csv")
+		.defer(d3.tsv, "cities.tsv")
 		.await(ready);
 
 	//Start of Choropleth drawing
-	function ready(error, map, data) {
+	function ready(error, map, data1, data2) {
 		var rateById = {};
 		var nameById = {};
 
-		data.forEach(function(d) {
+		data1.forEach(function(d) {
 			rateById[d.RegionCode] = +d.Deaths;
 			nameById[d.RegionCode] = d.RegionName;
 		});
-
-		regions = svg.append("g")
-			.attr("class", "region");
 
 		//Drawing Choropleth
 		region = regions.selectAll("path")
@@ -109,11 +110,35 @@
 					.style("opacity", 0.8);
 			});
 
-		zoom = d3.behavior.zoom()
-			.translate([width / 2, height / 2])
-			.scale(scale0)
-			.scaleExtent([scale0, 8 * scale0])
-			.on("zoom", zoomed);
+		station = svg.selectAll("g.station")
+			.data(data2)
+			.enter()
+			.append("g")
+			.attr("class", "station")
+			.attr("transform", function(d) {
+				return "translate(" + projection([d.lon, d.lat]) + ")";
+			});
+
+
+		station.append("circle")
+			.attr("r", 13)
+			.style("fill", "#cce4f9")
+			.style("stroke", "white")
+			.style("stroke-width", "2px")
+
+		station.append('svg:image')
+			.attr('x',-11)
+			.attr('y',-11)
+			.attr('width', 22)
+			.attr('height', 22)
+			.attr("xlink:href", function(d) {return d.Type})
+			.style("cursor", "pointer");
+
+		var zoom = d3.behavior.zoom()
+		.translate([width / 2, height / 2])
+		.scale(scale0)
+		.scaleExtent([scale0, 8 * scale0])
+		.on("zoom", zoomed);
 
 		svg
 			.call(zoom)
@@ -123,35 +148,15 @@
 			projection
 				.translate(zoom.translate())
 				.scale(zoom.scale());
+			
+			regions.selectAll("path")
+				.attr("d", path);
 
-			region.attr("d", path);
-		}
-
-		// Adding cities on the map
-		d3.tsv("cities.tsv", function(error, data) {
-			station = svg.selectAll("g.station")
-				.data(data)
-				.enter()
-				.append("g")
-				.attr("class", "station")
+			svg.selectAll("g.station")
 				.attr("transform", function(d) {
 					return "translate(" + projection([d.lon, d.lat]) + ")";
 				});
-
-			station.append("circle")
-				.attr("r", 13)
-				.style("fill", "#cce4f9")
-				.style("stroke", "white")
-				.style("stroke-width", "2px")
-
-			station.append('svg:image')
-				.attr('x',-11)
-				.attr('y',-11)
-				.attr('width', 22)
-				.attr('height', 22)
-				.attr("xlink:href", function(d) {return d.Type})
-				.style("cursor", "pointer");
-		});
+		}
 	};	// <-- End of Choropleth drawing
   </script>
 </body>
