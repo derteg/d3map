@@ -137,7 +137,7 @@
 		var zoom = d3.behavior.zoom()
 		.translate([width / 2, height / 2])
 		.scale(scale0)
-		.scaleExtent([scale0, 8 * scale0])
+		.scaleExtent([scale0, 2 * scale0]) // минимальное и максимальное значения для зума.
 		.on("zoom", zoomed);
 
 		svg
