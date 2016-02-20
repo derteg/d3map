@@ -1,9 +1,9 @@
-Rtype,RegionCode,RegionName,CarAccidents,Deaths
-fdistrict,Far_Eastern,Дальневосточный округ,11028,1352
-fdistrict,Volga,Приволжский округ,41710,5755
-fdistrict,Urals,Уральский округ,18357,2482
-fdistrict,Siberia,Сибирский округ,27905,3964
-fdistrict,Northwestern,Северо-Западный округ,23963,2497
-fdistrict,Southern,Южный округ,18940,2823
-fdistrict,Central,Центральный округ,54493,7305
-fregion,RU-CHU,Чукотский авт.округ,24,1
+RegionCode,RegionName,Color
+Southern,Южный округ,#3fb8ff
+Volga,Приволжский округ,#087cdf
+Central,Центральный округ,#68cafd
+Northwestern,Северо-Западный округ,#3fb8ff
+Urals,Уральский округ,#0099ff
+Siberia,Сибирский округ,#3fb8ff
+RU-CHU,Чукотский авт.округ,#aee4ff
+Far_Eastern,Дальневосточный округ,#68cafd

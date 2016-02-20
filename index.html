@@ -48,19 +48,19 @@
 		region,
 		station,
 		stationData,
+		centered,
 		scale0 = (width - 1) / 2;
 
 	// Setting color domains(intervals of values) for our map
-	var color_domain = [50, 150, 350, 750, 1500];
-	var ext_color_domain = [0, 50, 150, 350, 750, 1500];
-	var legend_labels = ["< 50", "50+", "100+", "150+", "350+", "750+", "1000+", "> 1500"];
+	var color_domain = [50, 100, 150, 200, 250, 300, 350];
 	var color = d3.scale.threshold()
 		.domain(color_domain)
 		.range(["#3fb8ff", "#68cafd", "#3fb8ff", "#3fb8ff", "#aee4ff", "#0099ff", "#68cafd", "#087cdf"]);
 
 	var svg = d3.select("body").append("svg")
 		.attr("width", width)
-		.attr("height", height);
+		.attr("height", height)
+		.attr("class", "map-energy__svg");
 
 	var projection = d3.geo.albers()
 		.rotate([-105, 0])
@@ -87,7 +87,7 @@
 		var nameById = {};
 
 		data1.forEach(function(d) {
-			rateById[d.RegionCode] = +d.Deaths;
+			rateById[d.RegionCode] = d.Color;
 			nameById[d.RegionCode] = d.RegionName;
 		});
 
@@ -98,16 +98,16 @@
 			.attr("d", path)
 			.style("stroke-width", "0")
 			.style("fill", function(d) {
-				return color(rateById[d.properties.region]);
+				return rateById[d.properties.region];
 			})
-			.style("opacity", 0.8)
+			.style("opacity", 1)
 			.on("mouseover", function(d) {
-				d3.select(this).transition().duration(300).style("opacity", 1);
+				d3.select(this).transition().duration(300).style("opacity", 0.95);
 			})
 			.on("mouseout", function() {
 				d3.select(this)
 					.transition().duration(300)
-					.style("opacity", 0.8);
+					.style("opacity", 1);
 			});
 
 		station = svg.selectAll("g.station")
@@ -133,6 +133,30 @@
 			.attr('height', 22)
 			.attr("xlink:href", function(d) {return d.Type})
 			.style("cursor", "pointer");
+
+		// regions.selectAll("path").on("click", zoomed2);
+
+		// function zoomed2(d) {
+		// 	var x, y, k;
+
+		// 	if (d && centered !== d) {
+		// 		var centroid = path.centroid(d);
+		// 		x = centroid[0];
+		// 		y = centroid[1];
+		// 		k = 4;
+		// 		centered = d;
+		// 	} else {
+		// 		x = width / 2;
+		// 		y = height / 2;
+		// 		k = 1;
+		// 		centered = null;
+		// 	}
+
+		// 	regions.transition()
+		//       .duration(750)
+		//       .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
+		//       .style("stroke-width", 1.5 / k + "px");
+		// }
 
 		var zoom = d3.behavior.zoom()
 		.translate([width / 2, height / 2])
