@@ -13,72 +13,64 @@
 	  stroke:white;
 	  stroke-width: 1px;
 	}
-
 	body {
-	  font-family: Arial, sans-serif;
+		background-color: #e1f5fd;
+		margin: 0;
 	}
-
-	.station {
-	  font: 10px sans-serif;
-	  font-weight: bold;
+	.map-energy {
+		text-align: center;
 	}
-
-	.legend {
-	  font-size: 12px;
-	}
-
-	div.tooltip {   
-	  position: absolute;           
-	  text-align: center;           
-	  width: 150px;                  
-	  height: 25px;                 
-	  padding: 2px;             
-	  font-size: 10px;     
-	  background: #FFFFE0;
-	  border: 1px;      
-	  border-radius: 8px;           
-	  pointer-events: none;         
-	}        
 </style>
 <body>
+<div class="map-energy"></div>
   <script type="text/javascript">
-	var width = 1200,
-		height = 500,
-		region,
+	var width = 1040,
+		height = 540,
 		region,
 		station,
 		stationData,
 		centered,
-		scale0 = (width - 1) / 2;
+		/*
+			Для растягивания проекции нужно указать параметр 'scale', который по умолчанию равен '150'.
+			Для нашей проекции нужно посчитать 'scale' вручную. Смотрим width и height у проекции (с масштабом по умолчанию 150)
+			Выбираем меньшее из двух.
+		*/
+		scale0 = Math.min(150 / 186 * width, 150 / 102 * height),
+		active = d3.select(null);
 
-	// Setting color domains(intervals of values) for our map
-	var color_domain = [50, 100, 150, 200, 250, 300, 350];
-	var color = d3.scale.threshold()
-		.domain(color_domain)
-		.range(["#3fb8ff", "#68cafd", "#3fb8ff", "#3fb8ff", "#aee4ff", "#0099ff", "#68cafd", "#087cdf"]);
-
-	var svg = d3.select("body").append("svg")
-		.attr("width", width)
-		.attr("height", height)
-		.attr("class", "map-energy__svg");
-
+	// Создаём функцию проекции
 	var projection = d3.geo.albers()
 		.rotate([-105, 0])
 		.center([-10, 65])
 		.parallels([52, 64])
-		.scale(700)
+		.scale(scale0)
 		.translate([width / 2, height / 2]);
 
-	var path = d3.geo.path().projection(projection);
+	// Создаем функцию, которая будет преобразовывать географические координаты в формат пути для элемента <path>
+	var path = d3.geo.path().projection(projection).pointRadius(1);	
 
-	var regions = svg.append("g")
-			.attr("class", "region");
+	// Создаём объект, ответственный за масштабирование
+	var zoom = d3.behavior.zoom()
+		.scaleExtent([1, 60])
+		.size([width, height])
+		.on("zoom", onZoomed);
 
-	//Reading map file and data
+	// Создаём элемент <svg>, где и будет рисоваться карта
+	var svg = d3.select(".map-energy").append("svg")
+		.attr("width", width)
+		.attr("height", height)
+		.attr("class", "map-energy__svg")
+		.call(zoom);
+
+	// Создаем элемент группы <g>, в который будут вкладываться все другие элементы
+	var regionsBox = svg.append("g")
+			.attr("class", "map-energy__regions");
+
+	// Рендерим карту из данных
 	queue()
-		.defer(d3.json, "russia_topo.json")
-		.defer(d3.csv, "Accidents.csv")
-		.defer(d3.tsv, "cities.tsv")
+		.defer(d3.json, "ajax/russia_topo.json")
+		.defer(d3.csv, "ajax/Accidents.csv")
+		.defer(d3.tsv, "ajax/cities.tsv")
 		.await(ready);
 
 	//Start of Choropleth drawing
@@ -86,15 +78,20 @@
 		var rateById = {};
 		var nameById = {};
 
+		if(error) {
+			console.log(error);
+			return;
+		}
+
 		data1.forEach(function(d) {
 			rateById[d.RegionCode] = d.Color;
 			nameById[d.RegionCode] = d.RegionName;
 		});
 
 		//Drawing Choropleth
-		region = regions.selectAll("path")
-			.data(topojson.object(map, map.objects.name).geometries)
-			.enter().append("path")
+		var countries = topojson.object(map, map.objects.name).geometries;
+		region = regionsBox.selectAll("path").data(countries).enter()
+			.append("path")
 			.attr("d", path)
 			.style("stroke-width", "0")
 			.style("fill", function(d) {
@@ -102,86 +99,70 @@
 			})
 			.style("opacity", 1)
 			.on("mouseover", function(d) {
-				d3.select(this).transition().duration(300).style("opacity", 0.95);
+				d3.select(this).transition().duration(300).style("fill", "#0865b4");
 			})
 			.on("mouseout", function() {
 				d3.select(this)
 					.transition().duration(300)
-					.style("opacity", 1);
+					.style("fill", function(d) {return rateById[d.properties.region];});
 			});
 
-		station = svg.selectAll("g.station")
+		station = regionsBox.selectAll("g.map-energy__station")
 			.data(data2)
 			.enter()
-			.append("g")
-			.attr("class", "station")
-			.attr("transform", function(d) {
-				return "translate(" + projection([d.lon, d.lat]) + ")";
+			.append("path")
+			.attr("class", "map-energy__station")
+			.attr('d', function (d) {
+				return path({
+					'type': 'Point',
+					'coordinates': [d.lon, d.lat]
+				});
 			});
+			// .attr("transform", function(d) {
+			// 	return "translate(" + projection([d.lon, d.lat]) + ")";
+			// });
 
-
-		station.append("circle")
+		station.append("a")
+			.attr("xlink:href", function(d) {return d.Link;});
+		
+		station.selectAll("a")
+			.append("circle")
 			.attr("r", 13)
-			.style("fill", "#cce4f9")
-			.style("stroke", "white")
-			.style("stroke-width", "2px")
+			.attr("fill", "#cce4f9")
+			.attr("stroke", "white")
+			.attr("stroke-width", "2px");
 
-		station.append('svg:image')
+		station.selectAll("a")
+			.append('svg:image')
 			.attr('x',-11)
 			.attr('y',-11)
 			.attr('width', 22)
 			.attr('height', 22)
-			.attr("xlink:href", function(d) {return d.Type})
+			.attr("xlink:href", function(d) {return d.Type;})
 			.style("cursor", "pointer");
+	}	// <-- End of Choropleth drawing
 
-		// regions.selectAll("path").on("click", zoomed2);
+	// Обработчик события zoom, который вызывается каждый раз, когда пользовать хочет
+	// измениеть положение или масштаб карты
+	function onZoomed() {
+		// Получаем желамые положение и масштаб карты из события
+		var t = d3.event.translate;
+		var s = d3.event.scale;
 
-		// function zoomed2(d) {
-		// 	var x, y, k;
+		// Проверям, чтобы новое положение не выходило за границы
+		t[0] = Math.max(Math.min(t[0], 0), width * (1 - s));
+		t[1] = Math.max(Math.min(t[1], 0), height * (1 - s));
 
-		// 	if (d && centered !== d) {
-		// 		var centroid = path.centroid(d);
-		// 		x = centroid[0];
-		// 		y = centroid[1];
-		// 		k = 4;
-		// 		centered = d;
-		// 	} else {
-		// 		x = width / 2;
-		// 		y = height / 2;
-		// 		k = 1;
-		// 		centered = null;
-		// 	}
+		// Записываем новое положение обратно в zoom
+		zoom.translate(t);
 
-		// 	regions.transition()
-		//       .duration(750)
-		//       .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")")
-		//       .style("stroke-width", 1.5 / k + "px");
-		// }
-
-		var zoom = d3.behavior.zoom()
-		.translate([width / 2, height / 2])
-		.scale(scale0)
-		.scaleExtent([scale0, 2 * scale0]) // минимальное и максимальное значения для зума.
-		.on("zoom", zoomed);
-
-		svg
-			.call(zoom)
-			.call(zoom.event);
-
-		function zoomed() {
-			projection
-				.translate(zoom.translate())
-				.scale(zoom.scale());
-			
-			regions.selectAll("path")
-				.attr("d", path);
-
-			svg.selectAll("g.station")
-				.attr("transform", function(d) {
-					return "translate(" + projection([d.lon, d.lat]) + ")";
-				});
-		}
-	};	// <-- End of Choropleth drawing
+		// Меняем масштаб и положение карты на экране
+		regionsBox
+		.attr('transform', 'translate(' + t + ')scale(' + s + ')');
+		
+		// Устанавливаем новый радиус для всех точек
+        path.pointRadius(Math.max(1/4, 1/s));
+	}
   </script>
 </body>
 </html>
