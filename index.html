@@ -20,22 +20,42 @@
 	.map-energy {
 		text-align: center;
 	}
+	.map-energy__svg {
+		width: 100%;
+	}
+	.map-energy__regions {
+		display: block;
+		margin: 0 auto;
+	}
+	.map-energy__background {
+		display: block;
+		margin: 0 auto;
+		fill: transparent;
+	}
+	.map-energy__region {	
+		transition: fill .3s;
+	}
+	.map-energy__region._active {
+		fill: orange !important;
+	}
 </style>
 <body>
 <div class="map-energy"></div>
   <script type="text/javascript">
-	var width = 1040,
-		height = 540,
+	var width = document.body.clientWidth,
+		height = 580,
 		region,
 		station,
 		stationData,
 		centered,
+		countries,
 		/*
 			Для растягивания проекции нужно указать параметр 'scale', который по умолчанию равен '150'.
-			Для нашей проекции нужно посчитать 'scale' вручную. Смотрим width и height у проекции (с масштабом по умолчанию 150)
+			Для нашей проекции нужно посчитать 'scale' вручную. 
+			Смотрим width и height у проекции с начальным масштабом (scale0 = 150)
 			Выбираем меньшее из двух.
 		*/
-		scale0 = Math.min(150 / 186 * width, 150 / 102 * height),
+		scale0 = Math.min(150 / 191 * width, 150 / 103 * height),
 		active = d3.select(null);
 
 	// Создаём функцию проекции
@@ -47,24 +67,20 @@
 		.translate([width / 2, height / 2]);
 
 	// Создаем функцию, которая будет преобразовывать географические координаты в формат пути для элемента <path>
-	var path = d3.geo.path().projection(projection).pointRadius(1);	
-
-	// Создаём объект, ответственный за масштабирование
-	var zoom = d3.behavior.zoom()
-		.scaleExtent([1, 60])
-		.size([width, height])
-		.on("zoom", onZoomed);
+	var path = d3.geo.path().projection(projection).pointRadius(1);
 
 	// Создаём элемент <svg>, где и будет рисоваться карта
 	var svg = d3.select(".map-energy").append("svg")
-		.attr("width", width)
 		.attr("height", height)
-		.attr("class", "map-energy__svg")
-		.call(zoom);
+		.attr("class", "map-energy__svg");
 
-	// Создаем элемент группы <g>, в который будут вкладываться все другие элементы
+	svg.append("rect")
+	    .attr("class", "map-energy__background")
+	    .attr("width", width)
+	    .attr("height", height);
+	
 	var regionsBox = svg.append("g")
-			.attr("class", "map-energy__regions");
+		.attr("class", "map-energy__regions");
 
 	// Рендерим карту из данных
 	queue()
@@ -78,6 +94,9 @@
 		var rateById = {};
 		var nameById = {};
 
+		svg.selectAll('rect.map-energy__background')
+			.on("click", clicked);
+
 		if(error) {
 			console.log(error);
 			return;
@@ -89,10 +108,11 @@
 		});
 
 		//Drawing Choropleth
-		var countries = topojson.object(map, map.objects.name).geometries;
+		countries = topojson.object(map, map.objects.name).geometries;
 		region = regionsBox.selectAll("path").data(countries).enter()
 			.append("path")
 			.attr("d", path)
+			.attr("class", "map-energy__region")
 			.style("stroke-width", "0")
 			.style("fill", function(d) {
 				return rateById[d.properties.region];
@@ -105,64 +125,72 @@
 				d3.select(this)
 					.transition().duration(300)
 					.style("fill", function(d) {return rateById[d.properties.region];});
-			});
+			})
+			.on("click", clicked);
 
-		station = regionsBox.selectAll("g.map-energy__station")
+		station = regionsBox.selectAll('g.map-energy__station')
 			.data(data2)
 			.enter()
-			.append("path")
-			.attr("class", "map-energy__station")
-			.attr('d', function (d) {
-				return path({
-					'type': 'Point',
-					'coordinates': [d.lon, d.lat]
-				});
+			.append('g')
+			.attr('class', 'map-energy__station')
+			.attr('transform', function(d) {
+				return 'translate(' + projection([d.lon, d.lat]) + ')scale(' + 1 + ')';
 			});
-			// .attr("transform", function(d) {
-			// 	return "translate(" + projection([d.lon, d.lat]) + ")";
-			// });
 
-		station.append("a")
-			.attr("xlink:href", function(d) {return d.Link;});
+		station.append('a')
+			.attr('xlink:href', function(d) {return d.Link;});
 		
-		station.selectAll("a")
-			.append("circle")
-			.attr("r", 13)
-			.attr("fill", "#cce4f9")
-			.attr("stroke", "white")
-			.attr("stroke-width", "2px");
+		station.selectAll('a')
+			.append('circle')
+			.attr('r', 13)
+			.attr('fill', '#cce4f9')
+			.attr('stroke', 'white')
+			.attr('stroke-width', '2px');
 
-		station.selectAll("a")
+		station.selectAll('a')
 			.append('svg:image')
 			.attr('x',-11)
 			.attr('y',-11)
 			.attr('width', 22)
 			.attr('height', 22)
-			.attr("xlink:href", function(d) {return d.Type;})
-			.style("cursor", "pointer");
+			.attr('xlink:href', function(d) {return d.Type;})
+			.style('cursor', 'pointer');
+
+		function clicked(d) {
+			var x, y, k, dotsScale;
+
+			if (d && centered !== d) {
+				centroid = path.centroid(d);
+				x = centroid[0];
+				y = centroid[1];
+				k = 1.2;
+				dotsScale = 0.8;
+				centered = d;
+			} else {
+				x = width / 2;
+				y = height / 2;
+				k = 1;
+				dotsScale = 1;
+				centered = null;
+			}
+
+			regionsBox.selectAll("path")
+				.classed("_active", centered && function(d) { return d === centered; });
+
+			regionsBox
+				.transition()
+				.duration(750)
+				.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + k + ")translate(" + -x + "," + -y + ")");
+
+			// Устанавливаем новый радиус для всех точек
+			station
+				.transition()
+				.duration(750)
+				.attr('transform', function(d){
+					return 'translate(' + projection([d.lon, d.lat]) + ')scale(' + dotsScale + ')';
+				});
+		}
 	}	// <-- End of Choropleth drawing
-
-	// Обработчик события zoom, который вызывается каждый раз, когда пользовать хочет
-	// измениеть положение или масштаб карты
-	function onZoomed() {
-		// Получаем желамые положение и масштаб карты из события
-		var t = d3.event.translate;
-		var s = d3.event.scale;
-
-		// Проверям, чтобы новое положение не выходило за границы
-		t[0] = Math.max(Math.min(t[0], 0), width * (1 - s));
-		t[1] = Math.max(Math.min(t[1], 0), height * (1 - s));
-
-		// Записываем новое положение обратно в zoom
-		zoom.translate(t);
-
-		// Меняем масштаб и положение карты на экране
-		regionsBox
-		.attr('transform', 'translate(' + t + ')scale(' + s + ')');
-		
-		// Устанавливаем новый радиус для всех точек
-        path.pointRadius(Math.max(1/4, 1/s));
-	}
   </script>
 </body>
 </html>
