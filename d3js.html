@@ -36,7 +36,7 @@
 		transition: fill .3s;
 	}
 	.map-energy__region._active {
-		fill: orange !important;
+		fill: #FF6096 !important;
 	}
 </style>
 <body>
@@ -139,20 +139,13 @@
 
 		station.append('a')
 			.attr('xlink:href', function(d) {return d.Link;});
-		
-		station.selectAll('a')
-			.append('circle')
-			.attr('r', 13)
-			.attr('fill', '#cce4f9')
-			.attr('stroke', 'white')
-			.attr('stroke-width', '2px');
 
 		station.selectAll('a')
 			.append('svg:image')
-			.attr('x',-11)
-			.attr('y',-11)
-			.attr('width', 22)
-			.attr('height', 22)
+			.attr('x',-15)
+			.attr('y',-16)
+			.attr('width', 29)
+			.attr('height', 32)
 			.attr('xlink:href', function(d) {return d.Type;})
 			.style('cursor', 'pointer');
 

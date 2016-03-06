@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title></title>
+	<link rel="stylesheet" href="">
+	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+	<link rel="stylesheet" href="libs/MarkerCluster.css" />
+	<style>
+
+		@import url(//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.5/leaflet.css);
+
+		#electromap {
+		  width: 1040px;
+		  height: 500px;
+		  background-color: transparent;
+		}
+		.country-name{
+			position: absolute;
+			top:2em;
+			right:1em;
+			z-index:6;
+			background:rgba(0,0,0,.75);
+			color:white;
+			padding:.5em .75em;
+			font-size:.85em;
+			display:none;
+		  }
+		  .mycluster {
+		  	width: 36px;
+		  	height: 36px;
+		  	text-align: center;
+		  	vertical-align: middle;
+		  	font-size: 12px;
+		  	line-height: 34px;
+		  	color: #0b46a6;
+		  	border: 2px solid #ffffff;
+		  	border-radius: 18px;
+		  	box-sizing: border-box;
+		  	background-color: #cce4f9;
+		  }
+	</style>
+
+	<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+	<script type="text/javascript" src="libs/leaflet.ajax.min.js"></script>
+	<script src="libs/leaflet.markercluster-src.js"></script>
+</head>
+<body>
+	<div id="electromap"></div>
+	<div id='loader'><span class='message'>loading</span></div>
+<script type="text/javascript">
+	(function(){
+		'use strict'
+
+		var startView = [65.41,109.51],
+			startZoom = 3,
+			regionsData,
+			pointsGeoJson,
+			markers,
+			clicker = 0;
+		  
+		var map = L.map('electromap', {maxZoom: 18, minZoom: 3}).setView(startView, startZoom);
+
+		regionsData = new L.GeoJSON.AJAX("ajax/adm4_region_compress.geojson", {
+			style: function() {
+				return {
+					color: '#8BC34A',
+					weight: 2,
+					fillColor: '#FFEDA0',
+					fillOpacity: 0.7
+				}
+			},
+			onEachFeature: onEachRegion
+		}).addTo(map);
+
+		function onEachRegion(feature, layer) {
+			layer.on({
+				click: zoomToRegion
+			});
+		}
+
+		function zoomToRegion(e) {
+			map.fitBounds(e.target.getBounds());
+		}
+
+		// асинхронно подгружаем точки-электростанций
+		pointsGeoJson = new L.GeoJSON.AJAX('ajax/electro-points.geojson', {
+			onEachFeature: function (feature, layer) {
+				layer.setIcon(L.icon({
+					"iconUrl": "pics/ico_" + feature.properties['type-electro'] + ".png",
+					"iconSize": [29, 32],
+					"iconAnchor": [29, 32],
+					"popupAnchor": [0, -32],
+					"className": "mymark"
+				}));
+				var popupText = 'Тип электростанции: ' + feature.properties['type-electro'];
+				layer.bindPopup(popupText);
+			}
+		});
+
+		// создаем объект под кластеризацию
+		markers = L.markerClusterGroup({
+			maxClusterRadius: 120,
+			iconCreateFunction: function (cluster) {
+				var count = cluster.getAllChildMarkers();
+				var n = 0;
+
+				return L.divIcon({'html': count.length, className: 'mycluster', iconSize: L.point(36, 36) });
+			},
+			//Disable all of the defaults:
+			spiderfyOnMaxZoom: false, showCoverageOnHover: false, zoomToBoundsOnClick: false
+		});
+
+		// после загрузки данных о точках добавляем из в обхект кластеризации и отображаем на карте
+		pointsGeoJson.on('data:loaded', function () {
+			markers.addLayer(pointsGeoJson);
+			map.addLayer(markers);
+		});	
+	}());
+</script>
+</body>
+</html>
