@@ -84,9 +84,9 @@
 
 	// Рендерим карту из данных
 	queue()
-		.defer(d3.json, "ajax/russia_topo.json")
-		.defer(d3.csv, "ajax/Accidents.csv")
-		.defer(d3.tsv, "ajax/cities.tsv")
+		.defer(d3.json, "ajax/d3js/russia_topo.json")
+		.defer(d3.csv, "ajax/d3js/Accidents.csv")
+		.defer(d3.tsv, "ajax/d3js/cities.tsv")
 		.await(ready);
 
 	//Start of Choropleth drawing

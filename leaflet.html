@@ -4,76 +4,95 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title></title>
+	<title>Leaflet map</title>
 	<link rel="stylesheet" href="">
 	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
 	<link rel="stylesheet" href="libs/MarkerCluster.css" />
-	<style>
-
-		@import url(//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.5/leaflet.css);
-
-		#electromap {
-		  width: 1040px;
-		  height: 500px;
-		  background-color: transparent;
-		}
-		.country-name{
-			position: absolute;
-			top:2em;
-			right:1em;
-			z-index:6;
-			background:rgba(0,0,0,.75);
-			color:white;
-			padding:.5em .75em;
-			font-size:.85em;
-			display:none;
-		  }
-		  .mycluster {
-		  	width: 36px;
-		  	height: 36px;
-		  	text-align: center;
-		  	vertical-align: middle;
-		  	font-size: 12px;
-		  	line-height: 34px;
-		  	color: #0b46a6;
-		  	border: 2px solid #ffffff;
-		  	border-radius: 18px;
-		  	box-sizing: border-box;
-		  	background-color: #cce4f9;
-		  }
-	</style>
+	<link rel="stylesheet" href="css/style.css" />
+	<link rel="stylesheet" href="libs/animate.css" />
 
 	<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+	<script src="libs/proj4.js"></script>
+	<script src="libs/proj4leaflet.js"></script>
 	<script type="text/javascript" src="libs/leaflet.ajax.min.js"></script>
 	<script src="libs/leaflet.markercluster-src.js"></script>
 </head>
 <body>
 	<div id="electromap"></div>
-	<div id='loader'><span class='message'>loading</span></div>
+	<div id='loader' class='loader'>
+		<span class="loader__message">Загружаем карты...</span>
+	</div>
 <script type="text/javascript">
 	(function(){
 		'use strict'
+		var loader = document.getElementById('loader');
+		// переопределяем проекцию по умолчанию на коническую 'Asia North Albers Equal Area Conic'
+		var crs = new L.Proj.CRS('EPSG:102025',
+			'+proj=aea +lat_1=15 +lat_2=65 +lat_0=30 +lon_0=95 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs',
+			{
+				resolutions: [8192, 4096, 2048, 1024, 512], // задаем допустимые уровни зума
+				origin: [0, 0]
+			}
+		);
 
-		var startView = [65.41,109.51],
-			startZoom = 3,
+		var startView = [64.63,97.08],
+			startZoom = 0,
 			regionsData,
 			pointsGeoJson,
-			markers,
-			clicker = 0;
-		  
-		var map = L.map('electromap', {maxZoom: 18, minZoom: 3}).setView(startView, startZoom);
+			markers;
 
-		regionsData = new L.GeoJSON.AJAX("ajax/adm4_region_compress.geojson", {
-			style: function() {
-				return {
-					color: '#8BC34A',
-					weight: 2,
-					fillColor: '#FFEDA0',
-					fillOpacity: 0.7
-				}
-			},
+		var map = L.map('electromap', {
+			crs: crs, 
+			maxZoom: crs.options.resolutions.length, 
+			minZoom: 0,
+		}).setView(startView, startZoom);
+
+		map.dragging.disable();
+		map.on('zoomend', function(event) {
+			if(event.target['_animateToZoom'] === 0) {
+				map.dragging.disable();
+				map.setView(startView, startZoom);
+			} else {
+				map.dragging.enable();
+			}
+		});
+
+		regionsData = new L.GeoJSON.AJAX("ajax/leaflet/adm4_region_compress.geojson", {
+			style: regionGetStyle,
 			onEachFeature: onEachRegion
-		}).addTo(map);
+		}).addTo(map).on('data:loaded', finishPreloader);
+
+		function finishPreloader() {
+			loader.style.opacity = '0';
+			setTimeout(function() {
+				loader.style.display = 'none';
+			}, 500);
+		}
+
+		// задаем общие стили для всех регионов
+		function regionGetStyle(feature) {
+			return {
+				color: '#797979',
+				weight: 1,
+				fillColor: regionGetColor(feature.properties['adm3_name'], feature.properties.name),
+				fillOpacity: 0.7
+			}
+		}
+
+		// раскращиваем по общим признакам
+		function regionGetColor(d, name) {
+			return d === 'Дальневосточный федеральный округ' && (name === 'Республика Саха (Якутия)' || name === 'Чукотский автономный округ' || name === 'Камчатский край' || name === 'Магаданская область') ? '#aee4ff' :
+			d === 'Дальневосточный федеральный округ' ? '#68cafd' :
+			d === 'Приволжский федеральный округ' ? '#087cdf':
+			d === 'Центральный федеральный округ' ? '#68cafd':
+			d === 'Северо-Западный федеральный округ' && (name === 'Новгородская область' || name === 'Вологодская область') ? '#68cafd':
+			d === 'Северо-Западный федеральный округ' ? '#3fb8ff':
+			d === 'Северо-Кавказский федеральный округ' ? '#3fb8ff':
+			d === 'Сибирский федеральный округ' ? '#3fb8ff':
+			d === 'Уральский федеральный округ' ? '#0099ff':
+			d === 'Южный федеральный округ' ? '#3fb8ff':
+			'#aee4ff';
+		}
 
 		function onEachRegion(feature, layer) {
 			layer.on({
@@ -86,7 +105,7 @@
 		}
 
 		// асинхронно подгружаем точки-электростанций
-		pointsGeoJson = new L.GeoJSON.AJAX('ajax/electro-points.geojson', {
+		pointsGeoJson = new L.GeoJSON.AJAX('ajax/leaflet/electro-points.geojson', {
 			onEachFeature: function (feature, layer) {
 				layer.setIcon(L.icon({
 					"iconUrl": "pics/ico_" + feature.properties['type-electro'] + ".png",
