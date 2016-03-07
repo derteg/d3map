@@ -18,10 +18,16 @@
 	<script src="libs/leaflet.markercluster-src.js"></script>
 </head>
 <body>
-	<div id="electromap"></div>
-	<div id='loader' class='loader'>
-		<span class="loader__message">Загружаем карты...</span>
-	</div>
+	<main class="promo-page">
+		<div class="promo-page__cont">
+			<div id="electromap" class="promo-page__map">
+				
+			</div>
+			<div id='loader' class='loader promo-page__loader'>
+				<span class="loader__message">Загружаем карты...</span>
+			</div>
+		</div>
+	</main>
 <script type="text/javascript">
 	(function(){
 		'use strict'
@@ -72,7 +78,7 @@
 		// задаем общие стили для всех регионов
 		function regionGetStyle(feature) {
 			return {
-				color: '#797979',
+				color: regionGetColor(feature.properties['adm3_name'], feature.properties.name),
 				weight: 1,
 				fillColor: regionGetColor(feature.properties['adm3_name'], feature.properties.name),
 				fillOpacity: 0.7
