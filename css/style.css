@@ -10,7 +10,6 @@ body {
 	left: 0%;
 	width: 100%;
 	height: 100%;
-	background-size: cover;
 }
 .promo-page__cont {
 	position: absolute;
@@ -81,4 +80,5 @@ body {
 	width: 100%;
 	display: block;
 	transform: translateY(-50%);
+	-webkit-transform: translateY(-50%);
 }
