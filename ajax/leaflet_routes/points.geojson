@@ -1,0 +1,173 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "power": 1000,
+        "name": "москва"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          37.5732421875,
+          55.751849391735284
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "power": 1000,
+        "name": "астрахань"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          48.076171875,
+          46.34692761055676
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "power": 1000,
+        "name": "новосибирск"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          82.913818359375,
+          55.015425940562984
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "power": 1000,
+        "name": "екатеринбург"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          60.58959960937501,
+          56.83094409085875
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "power": 300,
+        "name": "игарка"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          86.484375,
+          67.47492238478702
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "power": 300,
+        "name": "мирный"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          40.242919921875,
+          62.719498082521035
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "power": 300,
+        "name": "воркута"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          64.0283203125,
+          67.49595670843885
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "power": 1000,
+        "name": "нягань"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          65.41259765625,
+          62.14497603754045
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "power": 300,
+        "name": "хатанга"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          102.41455078125,
+          71.98578418101603
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "power": 1000,
+        "name": "мирный"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          114.01611328125,
+          62.53766129167858
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "power": 1000,
+        "name": "черский"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          161.3232421875,
+          68.65655498475735
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "power": 300,
+        "name": "якутск"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          129.83642578125,
+          62.000904713685856
+        ]
+      }
+    }
+  ]
+}
