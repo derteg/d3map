@@ -48,13 +48,24 @@
 		setTimeout(function() {
 			loader.style.display = 'none';
 		}, 500);
+
+		// делаем слой с регионами подложкой (z-index: 0)
+		regionsData.bringToBack();
 	}
 
-	function onEachRegion() {
-
+	// перебираем регионы
+	function onEachRegion(feature, layer) {
+		layer.on({
+			click: zoomToRegion
+		});
 	}
 
-	// задаем общие стили для всех регионов
+	// зумируем карту при клике на регион
+	function zoomToRegion(e) {
+		map.fitBounds(e.target.getBounds());
+	}
+
+	// стилизуем регионы
 	function regionGetStyle(feature) {
 		return {
 			color: regionGetColor(feature.properties['adm3_name'], feature.properties.name),
@@ -64,7 +75,7 @@
 		}
 	}
 
-	// раскращиваем по общим признакам
+	// раскрашиваем регионы
 	function regionGetColor(d, name) {
 		return d === 'Дальневосточный федеральный округ' && (name === 'Республика Саха (Якутия)' || name === 'Чукотский автономный округ' || name === 'Камчатский край' || name === 'Магаданская область') ? '#aee4ff' :
 		d === 'Дальневосточный федеральный округ' ? '#68cafd' :
@@ -105,9 +116,7 @@
 		return {
 			weight: routeGetWeigh(feature.properties.power),
 			color: routeGetColor(feature.properties.power),
-			opacity: 1,
-			fillOpacity: 1,
-			dashArray: 10
+			opacity: 0.7
 		}
 	}
 
@@ -115,17 +124,39 @@
 	function routeGetColor(power) {
 		return power === 1000 ? '#f50d6a' : 
 		power === 300 ? '#66ff00' : 
-		'#fdc01c';
+		'#fff';
 	}
 
 	// определяем толщину линии для маршрутов
 	function routeGetWeigh(power) {
-		return power === 1000 ? '3' : 
-		power === 300 ? '5' : 
+		return power === 1000 ? '5' : 
+		power === 300 ? '3' : 
 		'1';
 	}
 
-	function eachFeatureRoutes() {
+	// перебираем представления маршрутов
+	function eachFeatureRoutes(fetaure, layer) {
+		layer.on({
+			'mouseover': addHighlightRoute,
+			'mouseout': resetHighlightRoute
+		});
+	}
 
+	// подсвечиваем линию при наведении
+	function addHighlightRoute(e) {
+		var layer = e.target;
+
+		layer.setStyle({
+			opacity: 1
+		});
+	}
+
+	// re-подсвечиваем линию при наведении
+	function resetHighlightRoute(e) {
+		var layer = e.target;
+
+		layer.setStyle({
+			opacity: 0.7
+		});
 	}
 }());
