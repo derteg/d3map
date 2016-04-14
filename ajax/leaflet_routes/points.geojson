@@ -5,7 +5,8 @@
       "type": "Feature",
       "properties": {
         "power": 1000,
-        "name": "москва"
+        "name": "москва",
+        "year": 1990
       },
       "geometry": {
         "type": "Point",
@@ -19,7 +20,8 @@
       "type": "Feature",
       "properties": {
         "power": 1000,
-        "name": "астрахань"
+        "name": "астрахань",
+        "year": 1990
       },
       "geometry": {
         "type": "Point",
@@ -33,7 +35,8 @@
       "type": "Feature",
       "properties": {
         "power": 1000,
-        "name": "новосибирск"
+        "name": "новосибирск",
+        "year": 1990
       },
       "geometry": {
         "type": "Point",
@@ -47,7 +50,8 @@
       "type": "Feature",
       "properties": {
         "power": 1000,
-        "name": "екатеринбург"
+        "name": "екатеринбург",
+        "year": 1990
       },
       "geometry": {
         "type": "Point",
@@ -61,7 +65,8 @@
       "type": "Feature",
       "properties": {
         "power": 300,
-        "name": "игарка"
+        "name": "игарка",
+        "year": 2000
       },
       "geometry": {
         "type": "Point",
@@ -75,7 +80,8 @@
       "type": "Feature",
       "properties": {
         "power": 300,
-        "name": "мирный"
+        "name": "мирный",
+        "year": 2000
       },
       "geometry": {
         "type": "Point",
@@ -89,7 +95,8 @@
       "type": "Feature",
       "properties": {
         "power": 300,
-        "name": "воркута"
+        "name": "воркута",
+        "year": 2000
       },
       "geometry": {
         "type": "Point",
@@ -103,7 +110,8 @@
       "type": "Feature",
       "properties": {
         "power": 1000,
-        "name": "нягань"
+        "name": "нягань",
+        "year": 2000
       },
       "geometry": {
         "type": "Point",
@@ -117,7 +125,8 @@
       "type": "Feature",
       "properties": {
         "power": 300,
-        "name": "хатанга"
+        "name": "хатанга",
+        "year": 2010
       },
       "geometry": {
         "type": "Point",
@@ -131,7 +140,8 @@
       "type": "Feature",
       "properties": {
         "power": 1000,
-        "name": "мирный"
+        "name": "мирный",
+        "year": 2010
       },
       "geometry": {
         "type": "Point",
@@ -145,7 +155,8 @@
       "type": "Feature",
       "properties": {
         "power": 1000,
-        "name": "черский"
+        "name": "черский",
+        "year": 2010
       },
       "geometry": {
         "type": "Point",
@@ -159,7 +170,8 @@
       "type": "Feature",
       "properties": {
         "power": 300,
-        "name": "якутск"
+        "name": "якутск",
+        "year": 2010
       },
       "geometry": {
         "type": "Point",
